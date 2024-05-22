@@ -1,0 +1,25 @@
+name: Docker Series Builds
+
+on: 
+  push: 
+    branches: 
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t cryptolom/devops .
+
+      - name: Push image to Docker Hub
+        run: docker push cryptolom/devops
+
+      - name: Run tests in Docker container
+        run: docker run cryptolom/devops
