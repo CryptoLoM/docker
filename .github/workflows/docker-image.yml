@@ -14,8 +14,8 @@ jobs:
       - name: Login to DockerHub Registry
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: docker build
-        run: docker build -t CryptoLoM/python .
+        run: docker build -t cryptolom/python .
       - name: push image docker 
-        run: docker push CryptoLoM/python
+        run: docker push cryptolom/python
       - name: run test in docker container
-        run: docker run CryptoLoM/python
+        run: docker run cryptolom/python
