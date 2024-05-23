@@ -1,4 +1,3 @@
-FROM python:3.12.3 
-WORKDIR /devops
+FROM python:3.12.3
 COPY . .
-CMD ["main.py" , "test.py"]
+CMD ["python", "main.py", "test.py"]
