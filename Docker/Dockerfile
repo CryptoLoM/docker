@@ -1,3 +1,3 @@
 FROM python:3.12.3
 COPY . .
-CMD ["ls", "-la"]
+CMD ["python", "main.py", "test.py"]
