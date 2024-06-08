@@ -6,16 +6,13 @@ provider "aws" {
   s3_use_path_style           = true
   skip_credentials_validation = true
   skip_metadata_api_check     = true
-  
 
   endpoints {
-    config = "http://localhost:4566"
     s3     = "http://localhost:4566"
     lambda = "http://localhost:4566"
     sts    = "http://localhost:4566"
     iam    = "http://localhost:4566"
     sns    = "http://localhost:4566"
-    sqs    = "http://localhost:4566"
   }
 }
 
@@ -79,8 +76,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "finish_lifecycle" {
   }
 }
 
-
-
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     effect = "Allow"
@@ -137,25 +132,29 @@ resource "aws_lambda_function" "lambda_function" {
   source_code_hash = filebase64sha256(data.archive_file.lambda.output_path)
 }
 
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = aws_s3_bucket.start_bucket.id
-
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.lambda_function.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-}
-
 resource "aws_sns_topic" "uploads" {
   name = "uploads"
 }
 
-resource "aws_sqs_queue" "uploaded_files" {
-  name = "uploaded-files"
+resource "aws_lambda_permission" "sns_permission" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function.arn
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.uploads.arn
 }
 
-resource "aws_sns_topic_subscription" "sqs_subscription" {
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket = aws_s3_bucket.start_bucket.id
+
+  topic {
+    topic_arn = aws_sns_topic.uploads.arn
+    events    = ["s3:ObjectCreated:*"]
+  }
+}
+
+resource "aws_sns_topic_subscription" "lambda_subscription" {
   topic_arn = aws_sns_topic.uploads.arn
-  protocol  = "sqs"
-  endpoint  = aws_sqs_queue.uploaded_files.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.lambda_function.arn
 }
